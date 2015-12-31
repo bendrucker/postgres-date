@@ -9,6 +9,11 @@ test('date parser', function (t) {
     new Date('2010-12-11 09:09:04').toString()
   )
 
+  t.equal(
+    parse('0013-06-01').getYear(),
+    -1900 + 13
+  )
+
   function ms (string) {
     var base = '2010-01-01 01:01:01'
     return parse(base + string).getMilliseconds()
