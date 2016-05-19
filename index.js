@@ -4,8 +4,13 @@ var DATE_TIME = /(\d{1,})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\.\d{1,})?/
 var DATE = /^(\d{1,})-(\d{2})-(\d{2})$/
 var TIME_ZONE = /([Z|+\-])(\d{2})?:?(\d{2})?:?(\d{2})?/
 var BC = /BC$/
+var INFINITY = /^-?infinity$/
 
 module.exports = function parseDate (isoDate) {
+  if (INFINITY.test(isoDate)) {
+    // Capitalize to Infinity before passing to Number
+    return Number(isoDate.replace('i', 'I'))
+  }
   var matches = DATE_TIME.exec(isoDate)
 
   if (!matches) {

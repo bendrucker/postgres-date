@@ -80,5 +80,8 @@ test('date parser', function (t) {
     'negative HH:mm:ss offset'
   )
 
+  t.equal(parse('infinity'), Infinity)
+  t.equal(parse('-infinity'), -Infinity)
+
   t.end()
 })
