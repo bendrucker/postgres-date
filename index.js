@@ -16,7 +16,7 @@ module.exports = function parseDate (isoDate) {
   if (!matches) {
     // Force YYYY-MM-DD dates to be parsed as local time
     return DATE.test(isoDate) ?
-      new Date(isoDate + 'T00:00:00') :
+      getDate(isoDate) :
       null
   }
 
@@ -47,6 +47,17 @@ module.exports = function parseDate (isoDate) {
     date.setUTCFullYear(year)
   }
 
+  return date
+}
+
+function getDate (isoDate) {
+  var matches = DATE.exec(isoDate)
+  var year = parseInt(matches[1], 10)
+  var month = parseInt(matches[2], 10) - 1
+  var day = matches[3]
+  // YYYY-MM-DD will be parsed as local time
+  var date = new Date(year, month, day)
+  date.setFullYear(year)
   return date
 }
 
