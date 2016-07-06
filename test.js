@@ -4,6 +4,8 @@ var test = require('tape')
 var parse = require('./')
 
 test('date parser', function (t) {
+  t.equal(parse('garbage'), null)
+
   t.equal(
     parse('2010-12-11 09:09:04').toString(),
     new Date('2010-12-11 09:09:04').toString()
