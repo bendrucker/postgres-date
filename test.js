@@ -16,6 +16,11 @@ test('date parser', function (t) {
     13
   )
 
+  t.equal(
+    parse('1800-06-01').getFullYear(),
+    1800
+  )
+
   function ms (string) {
     var base = '2010-01-01 01:01:01'
     return parse(base + string).getMilliseconds()
