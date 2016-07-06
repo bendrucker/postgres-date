@@ -59,12 +59,6 @@ test('date parser', function (t) {
   )
 
   t.equal(
-    iso('2011-01-23 22:15:51Z'),
-    '2011-01-23T22:15:51.000Z',
-    'zulu time offset'
-  )
-
-  t.equal(
     iso('2011-01-23 10:15:51-04'),
     '2011-01-23T14:15:51.000Z',
     'negative hour offset'

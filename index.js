@@ -2,7 +2,7 @@
 
 var DATE_TIME = /(\d{1,})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\.\d{1,})?/
 var DATE = /^(\d{1,})-(\d{2})-(\d{2})$/
-var TIME_ZONE = /([Z|+\-])(\d{2})?:?(\d{2})?:?(\d{2})?/
+var TIME_ZONE = /([Z+-])(\d{2})?:?(\d{2})?:?(\d{2})?/
 var BC = /BC$/
 var INFINITY = /^-?infinity$/
 
@@ -65,15 +65,11 @@ function getDate (isoDate) {
 // Z (UTC)
 // -05
 // +06:30
-var types = ['Z', '+', '-']
 function timeZoneOffset (isoDate) {
   var zone = TIME_ZONE.exec(isoDate.split(' ')[1])
   if (!zone) return
   var type = zone[1]
 
-  if (!~types.indexOf(type)) {
-    throw new Error('Unidentified time zone part: ' + type)
-  }
   if (type === 'Z') {
     return 0
   }
