@@ -11,6 +11,13 @@ test('date parser', function (t) {
     new Date('2010-12-11 09:09:04').toString()
   )
 
+  var ancient = new Date('2010-12-11 09:09:04')
+  ancient.setFullYear(-2010)
+  t.equal(
+    parse('2010-12-11 09:09:04 BC').toString(),
+    ancient.toString()
+  )
+
   t.equal(
     parse('0013-06-01').getFullYear(),
     13
