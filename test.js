@@ -10,8 +10,8 @@ test('date parser', function (t) {
   )
 
   t.equal(
-    parse('0013-06-01').getYear(),
-    -1900 + 13
+    parse('0013-06-01').getFullYear(),
+    13
   )
 
   function ms (string) {
