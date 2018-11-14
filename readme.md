@@ -1,4 +1,4 @@
-# postgres-date [![Build Status](https://travis-ci.org/bendrucker/postgres-date.svg?branch=master)](https://travis-ci.org/bendrucker/postgres-date)
+# postgres-date [![Build Status](https://travis-ci.org/bendrucker/postgres-date.svg?branch=master)](https://travis-ci.org/bendrucker/postgres-date) [![Greenkeeper badge](https://badges.greenkeeper.io/bendrucker/postgres-date.svg)](https://greenkeeper.io/)
 
 > Postgres date column parser
 
