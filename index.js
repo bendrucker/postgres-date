@@ -1,7 +1,7 @@
 'use strict'
 
 var DATE_TIME = /(\d{1,})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\.\d{1,})?/
-var DATE = /^(\d{1,})-(\d{2})-(\d{2})$/
+var DATE = /^(\d{1,})-(\d{2})-(\d{2})( BC)?$/
 var TIME_ZONE = /([Z+-])(\d{2})?:?(\d{2})?:?(\d{2})?/
 var BC = /BC$/
 var INFINITY = /^-?infinity$/
@@ -22,8 +22,10 @@ module.exports = function parseDate (isoDate) {
 
   var isBC = BC.test(isoDate)
   var year = parseInt(matches[1], 10)
-  var isFirstCentury = year > 0 && year < 100
-  year = (isBC ? '-' : '') + year
+  if (isBC) {
+    year = bcYearToNegativeYear(year)
+  }
+  var yearIsBetween0And99 = year >= 0 && year < 100
 
   var month = parseInt(matches[2], 10) - 1
   var day = matches[3]
@@ -43,7 +45,7 @@ module.exports = function parseDate (isoDate) {
     date = new Date(year, month, day, hour, minute, second, ms)
   }
 
-  if (isFirstCentury) {
+  if (yearIsBetween0And99) {
     date.setUTCFullYear(year)
   }
 
@@ -52,7 +54,13 @@ module.exports = function parseDate (isoDate) {
 
 function getDate (isoDate) {
   var matches = DATE.exec(isoDate)
+
   var year = parseInt(matches[1], 10)
+  var isBC = !!matches[4]
+  if (isBC) {
+    year = bcYearToNegativeYear(year)
+  }
+
   var month = parseInt(matches[2], 10) - 1
   var day = matches[3]
   // YYYY-MM-DD will be parsed as local time
@@ -79,4 +87,10 @@ function timeZoneOffset (isoDate) {
     parseInt(zone[4] || 0, 10)
 
   return offset * sign * 1000
+}
+
+function bcYearToNegativeYear (year) {
+  // Account for numerical difference between representations of BC years
+  // See: https://github.com/bendrucker/postgres-date/issues/5
+  return -(year - 1)
 }
