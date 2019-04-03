@@ -14,7 +14,7 @@ module.exports = function parseDate (isoDate) {
 
   if (!matches) {
     // Force YYYY-MM-DD dates to be parsed as local time
-    return DATE.test(isoDate) ? getDate(isoDate) : null
+    return getDate(isoDate) || null
   }
 
   var isBC = !!matches[8]
@@ -58,6 +58,9 @@ module.exports = function parseDate (isoDate) {
 
 function getDate (isoDate) {
   var matches = DATE.exec(isoDate)
+  if (!matches) {
+    return
+  }
 
   var year = parseInt(matches[1], 10)
   var isBC = !!matches[4]
