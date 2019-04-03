@@ -96,6 +96,12 @@ test('date parser', function (t) {
     'negative HH:mm:ss offset'
   )
 
+  t.equal(
+    iso('0076-01-01 01:30:15+12'),
+    '0075-12-31T13:30:15.000Z',
+    '0 to 99 year boundary'
+  )
+
   t.equal(parse('infinity'), Infinity)
   t.equal(parse('-infinity'), -Infinity)
 
