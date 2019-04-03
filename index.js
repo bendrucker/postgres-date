@@ -23,7 +23,6 @@ module.exports = function parseDate (isoDate) {
   if (isBC) {
     year = bcYearToNegativeYear(year)
   }
-  var yearIsBetween0And99 = year >= 0 && year < 100
 
   var month = parseInt(matches[2], 10) - 1
   var day = matches[3]
@@ -34,17 +33,25 @@ module.exports = function parseDate (isoDate) {
   var ms = matches[7]
   ms = ms ? 1000 * parseFloat(ms) : 0
 
+  // Years from 0 to 99 are interpreted as 1900-1999
+  // by the multi-argument form of the date constructor
+  var yearIs0To99 = year >= 0 && year < 100
+
   var date
   var offset = timeZoneOffset(isoDate)
   if (offset != null) {
     var utc = Date.UTC(year, month, day, hour, minute, second, ms)
     date = new Date(utc - offset)
+
+    if (yearIs0To99) {
+      date.setUTCFullYear(year)
+    }
   } else {
     date = new Date(year, month, day, hour, minute, second, ms)
-  }
 
-  if (yearIsBetween0And99) {
-    date.setUTCFullYear(year)
+    if (yearIs0To99) {
+      date.setFullYear(year)
+    }
   }
 
   return date
