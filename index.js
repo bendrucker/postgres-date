@@ -1,9 +1,8 @@
 'use strict'
 
-var DATE_TIME = /(\d{1,})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\.\d{1,})?/
+var DATE_TIME = /(\d{1,})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\.\d{1,})?.*?( BC)?$/
 var DATE = /^(\d{1,})-(\d{2})-(\d{2})( BC)?$/
 var TIME_ZONE = /([Z+-])(\d{2})?:?(\d{2})?:?(\d{2})?/
-var BC = /BC$/
 var INFINITY = /^-?infinity$/
 
 module.exports = function parseDate (isoDate) {
@@ -18,7 +17,7 @@ module.exports = function parseDate (isoDate) {
     return DATE.test(isoDate) ? getDate(isoDate) : null
   }
 
-  var isBC = BC.test(isoDate)
+  var isBC = !!matches[8]
   var year = parseInt(matches[1], 10)
   if (isBC) {
     year = bcYearToNegativeYear(year)
