@@ -32,23 +32,21 @@ module.exports = function parseDate (isoDate) {
   var ms = matches[7]
   ms = ms ? 1000 * parseFloat(ms) : 0
 
-  // Years from 0 to 99 are interpreted as 1900-1999
-  // by the multi-argument form of the date constructor
-  var yearIs0To99 = year >= 0 && year < 100
-
   var date
   var offset = timeZoneOffset(isoDate)
   if (offset != null) {
     var utc = Date.UTC(year, month, day, hour, minute, second, ms)
     date = new Date(utc - offset)
 
-    if (yearIs0To99) {
+    // Account for years from 0 to 99 being interpreted as 1900-1999
+    // by Date.UTC / the multi-argument form of the Date constructor
+    if (is0To99(year)) {
       date.setUTCFullYear(year)
     }
   } else {
     date = new Date(year, month, day, hour, minute, second, ms)
 
-    if (yearIs0To99) {
+    if (is0To99(year)) {
       date.setFullYear(year)
     }
   }
@@ -72,7 +70,11 @@ function getDate (isoDate) {
   var day = matches[3]
   // YYYY-MM-DD will be parsed as local time
   var date = new Date(year, month, day)
-  date.setFullYear(year)
+
+  if (is0To99(year)) {
+    date.setFullYear(year)
+  }
+
   return date
 }
 
@@ -100,4 +102,8 @@ function bcYearToNegativeYear (year) {
   // Account for numerical difference between representations of BC years
   // See: https://github.com/bendrucker/postgres-date/issues/5
   return -(year - 1)
+}
+
+function is0To99 (num) {
+  return num >= 0 && num < 100
 }
