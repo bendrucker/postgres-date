@@ -11,11 +11,19 @@ test('date parser', function (t) {
     new Date('2010-12-11 09:09:04').toString()
   )
 
-  var ancient = new Date('2010-12-11 09:09:04')
-  ancient.setFullYear(-2010)
   t.equal(
-    parse('2010-12-11 09:09:04 BC').toString(),
-    ancient.toString()
+    parse('2011-12-11 09:09:04 BC').toString(),
+    new Date('-002010-12-11T09:09:04').toString()
+  )
+
+  t.equal(
+    parse('0001-12-11 09:09:04 BC').toString(),
+    new Date('0000-12-11T09:09:04').toString()
+  )
+
+  t.equal(
+    parse('0001-12-11 BC').getFullYear(),
+    0
   )
 
   t.equal(
@@ -86,6 +94,12 @@ test('date parser', function (t) {
     iso('0005-02-03 09:58:45-02:01:15'),
     '0005-02-03T12:00:00.000Z',
     'negative HH:mm:ss offset'
+  )
+
+  t.equal(
+    iso('0076-01-01 01:30:15+12'),
+    '0075-12-31T13:30:15.000Z',
+    '0 to 99 year boundary'
   )
 
   t.equal(parse('infinity'), Infinity)
