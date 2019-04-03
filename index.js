@@ -35,14 +35,15 @@ module.exports = function parseDate (isoDate) {
   var date
   var offset = timeZoneOffset(isoDate)
   if (offset != null) {
-    var utc = Date.UTC(year, month, day, hour, minute, second, ms)
-    date = new Date(utc - offset)
+    date = new Date(Date.UTC(year, month, day, hour, minute, second, ms))
 
     // Account for years from 0 to 99 being interpreted as 1900-1999
     // by Date.UTC / the multi-argument form of the Date constructor
     if (is0To99(year)) {
       date.setUTCFullYear(year)
     }
+
+    date.setTime(date.getTime() - offset)
   } else {
     date = new Date(year, month, day, hour, minute, second, ms)
 
