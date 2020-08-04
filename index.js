@@ -5,7 +5,7 @@ var DATE = /^(\d{1,})-(\d{2})-(\d{2})( BC)?$/
 var TIME_ZONE = /([Z+-])(\d{2})?:?(\d{2})?:?(\d{2})?/
 var INFINITY = /^-?infinity$/
 
-module.exports = function parseDate (isoDate) {
+function parseDate (roundMilliseconds, isoDate) {
   if (INFINITY.test(isoDate)) {
     // Capitalize to Infinity before passing to Number
     return Number(isoDate.replace('i', 'I'))
@@ -30,7 +30,7 @@ module.exports = function parseDate (isoDate) {
   var second = parseInt(matches[6], 10)
 
   var ms = matches[7]
-  ms = ms ? Math.round(1000 * parseFloat(ms)) : 0
+  ms = getMSInt(ms, roundMilliseconds)
 
   var date
   var offset = timeZoneOffset(isoDate)
@@ -108,3 +108,30 @@ function bcYearToNegativeYear (year) {
 function is0To99 (num) {
   return num >= 0 && num < 100
 }
+
+function getMSInt (msStr, roundMilliseconds) {
+  if (!msStr) {
+    return 0
+  }
+  var ms = 1000 * parseFloat(msStr)
+  if (roundMilliseconds) {
+    return Math.round(ms)
+  }
+  return ms
+}
+
+module.exports = parseDate.bind(null, false)
+
+/**
+ * Usage:
+ *
+ *     const pg = require('pg')
+ *     const postgresDate = require('postgres-date')
+ *     pg.types.setTypeParser(1114, postgresDate.parseDateRounded) // timestamp
+ *     pg.types.setTypeParser(1184, postgresDate.parseDateRounded) // timestamptz
+ *     pg.types.setTypeParser(1266, postgresDate.parseDateRounded) // timetz
+ *
+ * @param isoDate
+ * @returns {*}
+ */
+module.exports.parseDateRounded = parseDate.bind(null, true)

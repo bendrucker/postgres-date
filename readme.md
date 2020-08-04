@@ -25,6 +25,19 @@ parse('2011-01-23 22:15:51Z')
 // => 2011-01-23T22:15:51.000Z
 ```
 
+### Rounding
+The default parser truncates dates at the millisecond level.  Any microsecond information is discarded similar to 
+how most standard javascript date parsers work.
+
+There are some use cases where rounding to the nearest millisecond is preferable.  In those cases, you can
+use the following parser:
+
+```js
+var parse = require('postgres-date');
+parse.parseDateRounded('2011-01-23 22:15:51.323974Z');
+// -> 2011-01-23T22:15:51.324Z
+```
+
 ## API
 
 #### `parse(isoDate)` -> `date`
@@ -35,6 +48,17 @@ parse('2011-01-23 22:15:51Z')
 Type: `string`
 
 A date string from Postgres.
+
+#### `parse.parseDateRounded(isoDate)` -> `date`
+
+Returns a `Date`, rounded to the nearest millisecond.
+
+##### isoDate
+
+*Required*  
+Type: `string`
+
+A date string from Postgres
 
 ## Releases
 

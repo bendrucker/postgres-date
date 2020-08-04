@@ -56,8 +56,14 @@ test('date parser', function (t) {
 
   t.equal(
     iso('2011-01-23 22:15:51.280843-06'),
-    '2011-01-24T04:15:51.281Z',
+    '2011-01-24T04:15:51.280Z',
     'huge ms value'
+  )
+
+  t.equal(
+    parse.parseDateRounded('2011-01-23 22:15:51.280843-06').toISOString(),
+    '2011-01-24T04:15:51.281Z',
+    'huge ms value with rounding enabled'
   )
 
   t.equal(
