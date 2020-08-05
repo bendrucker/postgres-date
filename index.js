@@ -30,7 +30,7 @@ module.exports = function parseDate (isoDate) {
   var second = parseInt(matches[6], 10)
 
   var ms = matches[7]
-  ms = ms ? Math.round(1000 * parseFloat(ms)) : 0
+  ms = ms ? 1000 * parseFloat(ms) : 0
 
   var date
   var offset = timeZoneOffset(isoDate)
