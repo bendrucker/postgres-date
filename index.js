@@ -84,6 +84,10 @@ function getDate (isoDate) {
 // -05
 // +06:30
 function timeZoneOffset (isoDate) {
+  if (isoDate.endsWith('+00')) {
+    return 0
+  }
+
   var zone = TIME_ZONE.exec(isoDate.split(' ')[1])
   if (!zone) return
   var type = zone[1]
