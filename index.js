@@ -43,7 +43,9 @@ module.exports = function parseDate (isoDate) {
       date.setUTCFullYear(year)
     }
 
-    date.setTime(date.getTime() - offset)
+    if (offset !== 0) {
+      date.setTime(date.getTime() - offset)
+    }
   } else {
     date = new Date(year, month, day, hour, minute, second, ms)
 
@@ -84,6 +86,10 @@ function getDate (isoDate) {
 // -05
 // +06:30
 function timeZoneOffset (isoDate) {
+  if (isoDate.endsWith('+00')) {
+    return 0
+  }
+
   var zone = TIME_ZONE.exec(isoDate.split(' ')[1])
   if (!zone) return
   var type = zone[1]
