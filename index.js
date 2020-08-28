@@ -43,7 +43,9 @@ module.exports = function parseDate (isoDate) {
       date.setUTCFullYear(year)
     }
 
-    date.setTime(date.getTime() - offset)
+    if (offset !== 0) {
+      date.setTime(date.getTime() - offset)
+    }
   } else {
     date = new Date(year, month, day, hour, minute, second, ms)
 
