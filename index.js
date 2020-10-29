@@ -1,39 +1,39 @@
 'use strict'
 
-var DATE_TIME = /(\d{1,})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\.\d{1,})?.*?( BC)?$/
-var DATE = /^(\d{1,})-(\d{2})-(\d{2})( BC)?$/
-var TIME_ZONE = /([Z+-])(\d{2})?:?(\d{2})?:?(\d{2})?/
-var INFINITY = /^-?infinity$/
+const DATE_TIME = /(\d{1,})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\.\d{1,})?.*?( BC)?$/
+const DATE = /^(\d{1,})-(\d{2})-(\d{2})( BC)?$/
+const TIME_ZONE = /([Z+-])(\d{2})?:?(\d{2})?:?(\d{2})?/
+const INFINITY = /^-?infinity$/
 
 module.exports = function parseDate (isoDate) {
   if (INFINITY.test(isoDate)) {
     // Capitalize to Infinity before passing to Number
     return Number(isoDate.replace('i', 'I'))
   }
-  var matches = DATE_TIME.exec(isoDate)
+  const matches = DATE_TIME.exec(isoDate)
 
   if (!matches) {
     // Force YYYY-MM-DD dates to be parsed as local time
     return getDate(isoDate) || null
   }
 
-  var isBC = !!matches[8]
-  var year = parseInt(matches[1], 10)
+  const isBC = !!matches[8]
+  let year = parseInt(matches[1], 10)
   if (isBC) {
     year = bcYearToNegativeYear(year)
   }
 
-  var month = parseInt(matches[2], 10) - 1
-  var day = matches[3]
-  var hour = parseInt(matches[4], 10)
-  var minute = parseInt(matches[5], 10)
-  var second = parseInt(matches[6], 10)
+  const month = parseInt(matches[2], 10) - 1
+  const day = matches[3]
+  const hour = parseInt(matches[4], 10)
+  const minute = parseInt(matches[5], 10)
+  const second = parseInt(matches[6], 10)
 
-  var ms = matches[7]
+  let ms = matches[7]
   ms = ms ? 1000 * parseFloat(ms) : 0
 
-  var date
-  var offset = timeZoneOffset(isoDate)
+  let date
+  const offset = timeZoneOffset(isoDate)
   if (offset != null) {
     date = new Date(Date.UTC(year, month, day, hour, minute, second, ms))
 
@@ -58,21 +58,21 @@ module.exports = function parseDate (isoDate) {
 }
 
 function getDate (isoDate) {
-  var matches = DATE.exec(isoDate)
+  const matches = DATE.exec(isoDate)
   if (!matches) {
     return
   }
 
-  var year = parseInt(matches[1], 10)
-  var isBC = !!matches[4]
+  let year = parseInt(matches[1], 10)
+  const isBC = !!matches[4]
   if (isBC) {
     year = bcYearToNegativeYear(year)
   }
 
-  var month = parseInt(matches[2], 10) - 1
-  var day = matches[3]
+  const month = parseInt(matches[2], 10) - 1
+  const day = matches[3]
   // YYYY-MM-DD will be parsed as local time
-  var date = new Date(year, month, day)
+  const date = new Date(year, month, day)
 
   if (is0To99(year)) {
     date.setFullYear(year)
@@ -90,15 +90,15 @@ function timeZoneOffset (isoDate) {
     return 0
   }
 
-  var zone = TIME_ZONE.exec(isoDate.split(' ')[1])
+  const zone = TIME_ZONE.exec(isoDate.split(' ')[1])
   if (!zone) return
-  var type = zone[1]
+  const type = zone[1]
 
   if (type === 'Z') {
     return 0
   }
-  var sign = type === '-' ? -1 : 1
-  var offset = parseInt(zone[2], 10) * 3600 +
+  const sign = type === '-' ? -1 : 1
+  const offset = parseInt(zone[2], 10) * 3600 +
     parseInt(zone[3] || 0, 10) * 60 +
     parseInt(zone[4] || 0, 10)
 

@@ -1,7 +1,7 @@
 'use strict'
 
-var test = require('tape')
-var parse = require('./')
+const test = require('tape')
+const parse = require('./')
 
 test('date parser', function (t) {
   t.equal(parse('garbage'), null)
@@ -37,7 +37,7 @@ test('date parser', function (t) {
   )
 
   function ms (string) {
-    var base = '2010-01-01 01:01:01'
+    const base = '2010-01-01 01:01:01'
     return parse(base + string).getMilliseconds()
   }
   t.equal(ms('.1'), 100)
