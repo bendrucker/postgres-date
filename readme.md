@@ -19,7 +19,7 @@ npm install --save postgres-date
 ## Usage
 
 ```js
-var parse = require('postgres-date')
+const parse = require('postgres-date')
 parse('2011-01-23 22:15:51Z')
 // => 2011-01-23T22:15:51.000Z
 ```
