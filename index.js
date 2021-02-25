@@ -1,116 +1,308 @@
 'use strict'
 
-const DATE_TIME = /(\d{1,})-(\d{2})-(\d{2}) (\d{2}):(\d{2}):(\d{2})(\.\d{1,})?.*?( BC)?$/
-const DATE = /^(\d{1,})-(\d{2})-(\d{2})( BC)?$/
-const TIME_ZONE = /([Z+-])(\d{2})?:?(\d{2})?:?(\d{2})?/
-const INFINITY = /^-?infinity$/
+const CHAR_CODE_0 = '0'.charCodeAt(0)
+const CHAR_CODE_9 = '9'.charCodeAt(0)
+const CHAR_CODE_DASH = '-'.charCodeAt(0)
+const CHAR_CODE_COLON = ':'.charCodeAt(0)
+const CHAR_CODE_SPACE = ' '.charCodeAt(0)
+const CHAR_CODE_DOT = '.'.charCodeAt(0)
+const CHAR_CODE_Z = 'Z'.charCodeAt(0)
+const CHAR_CODE_MINUS = '-'.charCodeAt(0)
+const CHAR_CODE_PLUS = '+'.charCodeAt(0)
+
+class PGDateParser {
+  constructor (dateString) {
+    this.dateString = dateString
+    this.pos = 0
+    this.stringLen = dateString.length
+  }
+
+  isDigit (c) {
+    return c >= CHAR_CODE_0 && c <= CHAR_CODE_9
+  }
+
+  /** read numbers and parse positive integer regex: \d+ */
+  readInteger () {
+    let val = 0
+    const start = this.pos
+    while (this.pos < this.stringLen) {
+      const chr = this.dateString.charCodeAt(this.pos)
+      if (this.isDigit(chr)) {
+        val = val * 10
+        this.pos += 1
+        val += chr - CHAR_CODE_0
+      } else {
+        break
+      }
+    }
+
+    if (start === this.pos) {
+      return null
+    }
+
+    return val
+  }
+
+  /** read exactly 2 numbers and parse positive integer. regex: \d{2} */
+  readInteger2 () {
+    const chr1 = this.dateString.charCodeAt(this.pos)
+    const chr2 = this.dateString.charCodeAt(this.pos + 1)
+
+    if (this.isDigit(chr1) && this.isDigit(chr2)) {
+      this.pos += 2
+      return (chr1 - CHAR_CODE_0) * 10 + (chr2 - CHAR_CODE_0)
+    }
+
+    return -1
+  }
+
+  skipChar (char) {
+    if (this.pos === this.stringLen) {
+      return false
+    }
+
+    if (this.dateString.charCodeAt(this.pos) === char) {
+      this.pos += 1
+      return true
+    }
+
+    return false
+  }
+
+  readBC () {
+    if (this.pos === this.stringLen) {
+      return false
+    }
+
+    if (this.dateString.slice(this.pos, this.pos + 3) === ' BC') {
+      this.pos += 3
+      return true
+    }
+
+    return false
+  }
+
+  checkEnd () {
+    return this.pos === this.stringLen
+  }
+
+  getUTC () {
+    return this.skipChar(CHAR_CODE_Z)
+  }
+
+  readSign () {
+    if (this.pos >= this.stringLen) {
+      return null
+    }
+
+    const char = this.dateString.charCodeAt(this.pos)
+    if (char === CHAR_CODE_PLUS) {
+      this.pos += 1
+      return 1
+    }
+
+    if (char === CHAR_CODE_MINUS) {
+      this.pos += 1
+      return -1
+    }
+
+    return null
+  }
+
+  getTZOffset () {
+    // special handling for '+00' at the end of  - UTC
+    if (this.pos === this.stringLen - 3 && this.dateString.slice(this.pos, this.pos + 3) === '+00') {
+      this.pos += 3
+      return 0
+    }
+
+    if (this.stringLen === this.pos) {
+      return undefined
+    }
+
+    const sign = this.readSign()
+    if (sign === null) {
+      if (this.getUTC()) {
+        return 0
+      }
+
+      return undefined
+    }
+
+    const hours = this.readInteger2()
+    if (hours === null) {
+      return null
+    }
+    let offset = hours * 3600
+
+    if (!this.skipChar(CHAR_CODE_COLON)) {
+      return offset * sign * 1000
+    }
+
+    const minutes = this.readInteger2()
+    if (minutes === null) {
+      return null
+    }
+    offset += minutes * 60
+
+    if (!this.skipChar(CHAR_CODE_COLON)) {
+      return offset * sign * 1000
+    }
+
+    const seconds = this.readInteger2()
+    if (seconds == null) {
+      return null
+    }
+
+    return (offset + seconds) * sign * 1000
+  }
+
+  /* read milliseconds out of time fraction, returns 0 if missing, null if format invalid */
+  readMilliseconds () {
+    /* read milliseconds from fraction: .001=1, 0.1 = 100 */
+    if (this.skipChar(CHAR_CODE_DOT)) {
+      let i = 2
+      let val = 0
+      const start = this.pos
+      while (this.pos < this.stringLen) {
+        const chr = this.dateString.charCodeAt(this.pos)
+        if (this.isDigit(chr)) {
+          this.pos += 1
+          if (i >= 0) {
+            val += (chr - CHAR_CODE_0) * 10 ** i
+          }
+          i -= 1
+        } else {
+          break
+        }
+      }
+
+      if (start === this.pos) {
+        return null
+      }
+
+      return val
+    }
+
+    return 0
+  }
+
+  readDate () {
+    const year = this.readInteger()
+    if (!this.skipChar(CHAR_CODE_DASH)) {
+      return null
+    }
+
+    let month = this.readInteger2()
+    if (!this.skipChar(CHAR_CODE_DASH)) {
+      return null
+    }
+
+    const day = this.readInteger2()
+    if (year === null || month === null || day === null) {
+      return null
+    }
+
+    month = month - 1
+    return { year, month, day }
+  }
+
+  readTime () {
+    if (this.stringLen - this.pos < 9 || !this.skipChar(CHAR_CODE_SPACE)) {
+      return { hours: 0, minutes: 0, seconds: 0, milliseconds: 0 }
+    }
+
+    const hours = this.readInteger2()
+    if (hours === null || !this.skipChar(CHAR_CODE_COLON)) {
+      return null
+    }
+    const minutes = this.readInteger2()
+    if (minutes === null || !this.skipChar(CHAR_CODE_COLON)) {
+      return null
+    }
+    const seconds = this.readInteger2()
+    if (seconds === null) {
+      return null
+    }
+
+    const milliseconds = this.readMilliseconds()
+    if (milliseconds === null) {
+      return null
+    }
+
+    return { hours, minutes, seconds, milliseconds }
+  }
+
+  getJSDate () {
+    const date = this.readDate()
+    if (date === null) {
+      return null
+    }
+
+    const time = this.readTime()
+    if (time === null) {
+      return null
+    }
+
+    const tzOffset = this.getTZOffset()
+    if (tzOffset === null) {
+      return null
+    }
+
+    const isBC = this.readBC()
+    if (isBC) {
+      date.year = -(date.year - 1)
+    }
+
+    if (!this.checkEnd()) {
+      return null
+    }
+
+    let jsDate
+    if (tzOffset !== undefined) {
+      jsDate = new Date(
+        Date.UTC(date.year, date.month, date.day, time.hours, time.minutes, time.seconds, time.milliseconds)
+      )
+
+      if (date.year <= 99 && date.year >= -99) {
+        jsDate.setUTCFullYear(date.year)
+      }
+
+      if (tzOffset !== 0) {
+        jsDate.setTime(jsDate.getTime() - tzOffset)
+      }
+    } else {
+      jsDate = new Date(date.year, date.month, date.day, time.hours, time.minutes, time.seconds, time.milliseconds)
+      if (date.year <= 99 && date.year >= -99) {
+        jsDate.setFullYear(date.year)
+      }
+    }
+
+    return jsDate
+  }
+
+  static parse (dateString) {
+    return new PGDateParser(dateString).getJSDate()
+  }
+}
 
 module.exports = function parseDate (isoDate) {
-  if (INFINITY.test(isoDate)) {
-    // Capitalize to Infinity before passing to Number
-    return Number(isoDate.replace('i', 'I'))
-  }
-  const matches = DATE_TIME.exec(isoDate)
-
-  if (!matches) {
-    // Force YYYY-MM-DD dates to be parsed as local time
-    return getDate(isoDate) || null
+  if (isoDate === null || isoDate === undefined) {
+    return null
   }
 
-  const isBC = !!matches[8]
-  let year = parseInt(matches[1], 10)
-  if (isBC) {
-    year = bcYearToNegativeYear(year)
-  }
+  const date = PGDateParser.parse(isoDate)
 
-  const month = parseInt(matches[2], 10) - 1
-  const day = matches[3]
-  const hour = parseInt(matches[4], 10)
-  const minute = parseInt(matches[5], 10)
-  const second = parseInt(matches[6], 10)
-
-  let ms = matches[7]
-  ms = ms ? 1000 * parseFloat(ms) : 0
-
-  let date
-  const offset = timeZoneOffset(isoDate)
-  if (offset != null) {
-    date = new Date(Date.UTC(year, month, day, hour, minute, second, ms))
-
-    // Account for years from 0 to 99 being interpreted as 1900-1999
-    // by Date.UTC / the multi-argument form of the Date constructor
-    if (is0To99(year)) {
-      date.setUTCFullYear(year)
+  // parsing failed, check for infinity
+  if (date === null) {
+    if (isoDate === 'infinity') {
+      return Infinity
     }
 
-    if (offset !== 0) {
-      date.setTime(date.getTime() - offset)
-    }
-  } else {
-    date = new Date(year, month, day, hour, minute, second, ms)
-
-    if (is0To99(year)) {
-      date.setFullYear(year)
+    if (isoDate === '-infinity') {
+      return -Infinity
     }
   }
 
   return date
-}
-
-function getDate (isoDate) {
-  const matches = DATE.exec(isoDate)
-  if (!matches) {
-    return
-  }
-
-  let year = parseInt(matches[1], 10)
-  const isBC = !!matches[4]
-  if (isBC) {
-    year = bcYearToNegativeYear(year)
-  }
-
-  const month = parseInt(matches[2], 10) - 1
-  const day = matches[3]
-  // YYYY-MM-DD will be parsed as local time
-  const date = new Date(year, month, day)
-
-  if (is0To99(year)) {
-    date.setFullYear(year)
-  }
-
-  return date
-}
-
-// match timezones:
-// Z (UTC)
-// -05
-// +06:30
-function timeZoneOffset (isoDate) {
-  if (isoDate.endsWith('+00')) {
-    return 0
-  }
-
-  const zone = TIME_ZONE.exec(isoDate.split(' ')[1])
-  if (!zone) return
-  const type = zone[1]
-
-  if (type === 'Z') {
-    return 0
-  }
-  const sign = type === '-' ? -1 : 1
-  const offset = parseInt(zone[2], 10) * 3600 +
-    parseInt(zone[3] || 0, 10) * 60 +
-    parseInt(zone[4] || 0, 10)
-
-  return offset * sign * 1000
-}
-
-function bcYearToNegativeYear (year) {
-  // Account for numerical difference between representations of BC years
-  // See: https://github.com/bendrucker/postgres-date/issues/5
-  return -(year - 1)
-}
-
-function is0To99 (num) {
-  return num >= 0 && num < 100
 }
