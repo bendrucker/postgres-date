@@ -14,7 +14,7 @@
     "node": ">=12"
   },
   "scripts": {
-    "test": "standard && tape test.js"
+    "test": "standard && tape test.js && tsd"
   },
   "keywords": [
     "postgres",
@@ -24,10 +24,12 @@
   "dependencies": {},
   "devDependencies": {
     "standard": "^16.0.0",
-    "tape": "^5.0.0"
+    "tape": "^5.0.0",
+    "tsd": "^0.17.0"
   },
   "files": [
     "index.js",
+    "index.d.ts",
     "readme.md"
   ]
 }
