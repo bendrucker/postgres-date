@@ -10,11 +10,36 @@ const CHAR_CODE_Z = 'Z'.charCodeAt(0)
 const CHAR_CODE_MINUS = '-'.charCodeAt(0)
 const CHAR_CODE_PLUS = '+'.charCodeAt(0)
 
+let temporalLoaded = false
+
+function loadTemporalPolyfill () {
+  temporalLoaded = true
+  if (globalThis.Temporal === undefined) {
+    globalThis.Temporal = require('temporal-polyfill').Temporal
+  }
+}
+
 class PGDateParser {
-  constructor (dateString) {
+  constructor (dateString, options) {
     this.dateString = dateString
     this.pos = 0
     this.stringLen = dateString.length
+
+    if (typeof options === 'object') {
+      this.timeZone = options.timeZone
+      if (options.disambiguation === 'undefined' || options.disambiguation === 'postgres') {
+        this.disambiguation = 'later'
+      } else if (options.disambiguation === 'javascript') {
+        this.disambiguation = 'compatible'
+      } else {
+        this.disambiguation = options.disambiguation
+      }
+    } else if (typeof options === 'number') {
+      this.offset = options
+    } else {
+      this.timeZone = options
+      this.disambiguation = 'later' // Consistent with Postgres
+    }
   }
 
   isDigit (c) {
@@ -109,7 +134,7 @@ class PGDateParser {
     return null
   }
 
-  getTZOffset () {
+  getTZOffset (date, time) {
     // special handling for '+00' at the end of  - UTC
     if (this.pos === this.stringLen - 3 && this.dateString.slice(this.pos, this.pos + 3) === '+00') {
       this.pos += 3
@@ -117,6 +142,29 @@ class PGDateParser {
     }
 
     if (this.stringLen === this.pos) {
+      if (this.offset !== undefined) {
+        return this.offset * 60 * 1000
+      } else if (this.timeZone !== undefined) {
+        if (!temporalLoaded) {
+          loadTemporalPolyfill()
+        }
+        // eslint-disable-next-line no-undef
+        const pdt = Temporal.PlainDateTime.from({
+          year: date.year,
+          month: date.month + 1,
+          day: date.day,
+          hour: time.hours,
+          minute: time.minutes,
+          second: time.seconds,
+          millisecond: time.milliseconds,
+          timeZone: this.timeZone
+        })
+        const utc = pdt.toZonedDateTime('UTC').toInstant()
+        const zdt = pdt.toZonedDateTime(this.timeZone, {
+          disambiguation: this.disambiguation
+        }).toInstant()
+        return utc.epochMilliseconds - zdt.epochMilliseconds
+      }
       return undefined
     }
 
@@ -244,7 +292,7 @@ class PGDateParser {
       return null
     }
 
-    const tzOffset = this.getTZOffset()
+    const tzOffset = this.getTZOffset(date, time)
     if (tzOffset === null) {
       return null
     }
@@ -281,17 +329,17 @@ class PGDateParser {
     return jsDate
   }
 
-  static parse (dateString) {
-    return new PGDateParser(dateString).getJSDate()
+  static parse (dateString, timeZone) {
+    return new PGDateParser(dateString, timeZone).getJSDate()
   }
 }
 
-module.exports = function parseDate (isoDate) {
+module.exports = function parseDate (isoDate, timeZone) {
   if (isoDate === null || isoDate === undefined) {
     return null
   }
 
-  const date = PGDateParser.parse(isoDate)
+  const date = PGDateParser.parse(isoDate, timeZone)
 
   // parsing failed, check for infinity
   if (date === null) {

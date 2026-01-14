@@ -2,6 +2,7 @@
 
 const test = require('tape')
 const parse = require('./')
+const timezoneMock = require('timezone-mock')
 
 test('date parser', function (t) {
   t.equal(parse('garbage'), null)
@@ -36,10 +37,171 @@ test('date parser', function (t) {
     1800
   )
 
+  const summer = '2025-06-30 11:57:23'
+  const winter = '2026-01-13 23:53:08'
+
+  withLocalTimeZone('US/Eastern', () => {
+    t.equal(
+      parse(winter, 'UTC').getTime(),
+      new Date('2026-01-13T23:53:08Z').getTime(),
+      'client behind server'
+    )
+    t.equal(
+      parse(summer, 'UTC').getTime(),
+      new Date('2025-06-30T11:57:23Z').getTime(),
+      'client behind server (DST)'
+    )
+    t.equal(
+      parse(winter, 'America/New_York').getTime(),
+      new Date('2026-01-13T23:53:08-05:00').getTime(),
+      'client same time as server'
+    )
+    t.equal(
+      parse(winter, 123).getTime(),
+      new Date('2026-01-13T23:53:08+02:03').getTime(),
+      'Arbitrary offset in minutes'
+    )
+    t.equal(
+      parse(winter, 1440).getTime(),
+      new Date('2026-01-12T23:53:08Z').getTime(),
+      'Extreme offset in minutes (UTC +24h)'
+    )
+    t.equal(
+      parse(summer, 'Pacific/Kiritimati').getTime(),
+      new Date('2025-06-30T11:57:23+14:00').getTime(),
+      'Server in Kiritimati'
+    )
+    // Etc zones have inverted signs for POSIX compliance, so this is UTC-12.
+    t.equal(
+      parse(summer, 'Etc/GMT+12').getTime(),
+      new Date('2025-06-30T11:57:23-12:00').getTime(),
+      'Server on Baker Island'
+    )
+  })
+
+  withLocalTimeZone('Etc/GMT-14', () => {
+    t.equal(
+      parse(summer, 'Etc/GMT+12').getTime(),
+      new Date('2025-06-30T11:57:23-12:00').getTime(),
+      'Server extremely behind'
+    )
+  })
+
+  withLocalTimeZone('Etc/GMT+12', () => {
+    t.equal(
+      parse(summer, 'Etc/GMT+12').getTime(),
+      new Date('2025-06-30T11:57:23-12:00').getTime(),
+      'Server extremely ahead'
+    )
+  })
+
+  withLocalTimeZone('Australia/Adelaide', () => {
+    t.equal(
+      parse(summer, 'Asia/Kathmandu').getTime(),
+      new Date('2025-06-30T11:57:23+05:45').getTime(),
+      'Funky offsets'
+    )
+  })
+
+  const springForwardLocalStr = '2025-03-09 02:30:00' // Never occurred in the U.S.
+  const springForwardEarlyTime = new Date('2025-03-09T02:30:00-04:00').getTime()
+  const springForwardLateTime = new Date('2025-03-09T02:30:00-05:00').getTime()
+
+  const fallBackLocalStr = '2025-11-02 01:30:00' // Occurred twice in the U.S.
+  const fallBackEarlyTime = new Date('2025-11-02T01:30:00-04:00').getTime()
+  const fallBackLateTime = new Date('2025-11-02T01:30:00-05:00').getTime()
+
+  const postgresTzOptions = { timeZone: 'America/New_York', disambiguation: 'postgres' }
+
+  t.equal(
+    parse(winter, { timeZone: 'America/New_York' }).getTime(),
+    new Date('2026-01-13T23:53:08-05:00').getTime(),
+    'Allows timeZone as object'
+  )
+
+  t.equal(
+    parse(springForwardLocalStr, postgresTzOptions).getTime(),
+    springForwardLateTime,
+    '"postgres" disambiguation uses later time (spring forward)'
+  )
+
+  t.equal(
+    parse(fallBackLocalStr, postgresTzOptions).getTime(),
+    fallBackLateTime,
+    '"postgres" disambiguation uses later time (fall back)'
+  )
+
+  const javascriptTzOptions = { timeZone: 'America/New_York', disambiguation: 'javascript' }
+
+  t.equal(
+    parse(springForwardLocalStr, javascriptTzOptions).getTime(),
+    springForwardLateTime,
+    '"javascript" disambiguation uses later time (spring forward)'
+  )
+
+  t.equal(
+    parse(fallBackLocalStr, javascriptTzOptions).getTime(),
+    fallBackEarlyTime,
+    '"javascript" disambiguation uses earlier time (fall back)'
+  )
+
+  const earlierTzOptions = { timeZone: 'America/New_York', disambiguation: 'earlier' }
+  t.equal(
+    parse(springForwardLocalStr, earlierTzOptions).getTime(),
+    springForwardEarlyTime,
+    '"earlier" disambiguation (spring forward)'
+  )
+
+  t.equal(
+    parse(fallBackLocalStr, earlierTzOptions).getTime(),
+    fallBackEarlyTime,
+    '"earlier" disambiguation (fall back)'
+  )
+
+  const laterTzOptions = { timeZone: 'America/New_York', disambiguation: 'later' }
+  t.equal(
+    parse(springForwardLocalStr, laterTzOptions).getTime(),
+    springForwardLateTime,
+    '"later" disambiguation (spring forward)'
+  )
+
+  t.equal(
+    parse(fallBackLocalStr, laterTzOptions).getTime(),
+    fallBackLateTime,
+    '"later" disambiguation (fall back)'
+  )
+
+  const rejectTzOptions = { timeZone: 'America/New_York', disambiguation: 'reject' }
+
+  t.throws(
+    () => parse(springForwardLocalStr, rejectTzOptions),
+    (e) => e instanceof RangeError,
+    '"reject" disambiguation rejects illegal timestamp'
+  )
+
+  t.throws(
+    () => parse(fallBackLocalStr, rejectTzOptions),
+    (e) => e instanceof RangeError,
+    '"reject" disambiguation rejects ambiguous timestamp'
+  )
+
+  t.equal(
+    parse(springForwardLocalStr, 'America/New_York').getTime(),
+    parse(springForwardLocalStr, { timeZone: 'America/New_York', disambiguation: 'postgres' }).getTime(),
+    'disambiguation defaults to postgres (spring forward)'
+  )
+
+  t.equal(
+    parse(fallBackLocalStr, 'America/New_York').getTime(),
+    parse(fallBackLocalStr, { timeZone: 'America/New_York', disambiguation: 'postgres' }).getTime(),
+    'disambiguation defaults to postgres (fall back)'
+  )
+
   function ms (string) {
     const base = '2010-01-01 01:01:01'
     return parse(base + string).getMilliseconds()
   }
+
   t.equal(ms('.1'), 100)
   t.equal(ms('.01'), 10)
   t.equal(ms('.74'), 740)
@@ -107,3 +269,12 @@ test('date parser', function (t) {
 
   t.end()
 })
+
+function withLocalTimeZone (tz, f) {
+  timezoneMock.register(tz)
+  try {
+    f()
+  } finally {
+    timezoneMock.unregister()
+  }
+}
