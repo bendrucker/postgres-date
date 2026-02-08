@@ -188,13 +188,25 @@ test('date parser', function (t) {
   t.equal(
     parse(springForwardLocalStr, 'America/New_York').getTime(),
     parse(springForwardLocalStr, { timeZone: 'America/New_York', disambiguation: 'postgres' }).getTime(),
-    'disambiguation defaults to postgres (spring forward)'
+    'disambiguation defaults to postgres (spring forward, no options object)'
+  )
+
+  t.equal(
+    parse(springForwardLocalStr, { timeZone: 'America/New_York' }).getTime(),
+    parse(springForwardLocalStr, { timeZone: 'America/New_York', disambiguation: 'postgres' }).getTime(),
+    'disambiguation defaults to postgres (spring forward, disambiguation omitted from options object)'
   )
 
   t.equal(
     parse(fallBackLocalStr, 'America/New_York').getTime(),
     parse(fallBackLocalStr, { timeZone: 'America/New_York', disambiguation: 'postgres' }).getTime(),
-    'disambiguation defaults to postgres (fall back)'
+    'disambiguation defaults to postgres (fall back, no options object)'
+  )
+
+  t.equal(
+    parse(fallBackLocalStr, { timeZone: 'America/New_York' }).getTime(),
+    parse(fallBackLocalStr, { timeZone: 'America/New_York', disambiguation: 'postgres' }).getTime(),
+    'disambiguation defaults to postgres (fall back, disambiguation omitted from options object)'
   )
 
   function ms (string) {

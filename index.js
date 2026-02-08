@@ -27,7 +27,7 @@ class PGDateParser {
 
     if (typeof options === 'object') {
       this.timeZone = options.timeZone
-      if (options.disambiguation === 'undefined' || options.disambiguation === 'postgres') {
+      if (options.disambiguation === undefined || options.disambiguation === 'postgres') {
         this.disambiguation = 'later'
       } else if (options.disambiguation === 'javascript') {
         this.disambiguation = 'compatible'
