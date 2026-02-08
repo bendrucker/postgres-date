@@ -156,8 +156,7 @@ class PGDateParser {
           hour: time.hours,
           minute: time.minutes,
           second: time.seconds,
-          millisecond: time.milliseconds,
-          timeZone: this.timeZone
+          millisecond: time.milliseconds
         })
         const utc = pdt.toZonedDateTime('UTC').toInstant()
         const zdt = pdt.toZonedDateTime(this.timeZone, {
