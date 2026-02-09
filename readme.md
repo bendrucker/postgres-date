@@ -32,7 +32,8 @@ If the Postgres date or time string is provided without a time zone,
 `postgres-date` will interpret it with the JS environment's local time
 zone by default. Parsing to an alternate time zone requires the
 `Temporal` API. If `Temporal` is not available globally in your
-environment, install [`temporal-polyfill`](https://www.npmjs.com/package/temporal-polyfill).
+environment, install [`temporal-polyfill`](https://www.npmjs.com/package/temporal-polyfill)
+or [`@js-temporal/polyfill`](https://www.npmjs.com/package/@js-temporal/polyfill).
 
 ## API
 

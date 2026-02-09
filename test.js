@@ -7,6 +7,11 @@ const timezoneMock = require('timezone-mock')
 const { Temporal } = require('temporal-polyfill')
 const Module = require('module')
 
+const supportedPolyfills = [
+  'temporal-polyfill',
+  '@js-temporal/polyfill'
+]
+
 test('date parser', function (t) {
   t.equal(parse('garbage'), null)
 
@@ -46,7 +51,11 @@ test('date parser', function (t) {
   const oldTemporal = globalThis.Temporal
   globalThis.Temporal = undefined
   try {
-    const parseWithNoTemporal = proxyquire('./', { 'temporal-polyfill': null })
+    const stubs = {}
+    for (const polyfill of supportedPolyfills) {
+      stubs[polyfill] = null
+    }
+    const parseWithNoTemporal = proxyquire('./', stubs)
     const expectedCause = new Error("Cannot find module 'temporal-polyfill'")
     expectedCause.code = 'MODULE_NOT_FOUND'
     t.throws(
@@ -58,15 +67,21 @@ test('date parser', function (t) {
       'Helpful error message if no Temporal is available'
     )
 
-    const parseWithAPolyfill = proxyquire('./', { 'temporal-polyfill': { Temporal } })
-    t.equal(
-      parseWithAPolyfill(winter, 'UTC').getTime(),
-      new Date('2026-01-13T23:53:08Z').getTime(),
-      'Passing time zone with Temporal provided by temporal-polyfill'
-    )
+    for (const polyfillToTest of supportedPolyfills) {
+      for (const polyfillToStub of supportedPolyfills) {
+        stubs[polyfillToStub] =
+          polyfillToTest === polyfillToStub ? require(polyfillToTest) : null
+      }
+      const parseWithPolyfill = proxyquire('./', stubs)
+      t.equal(
+        parseWithPolyfill(winter, 'UTC').getTime(),
+        new Date('2026-01-13T23:53:08Z').getTime(),
+        `Passing time zone with Temporal provided by ${polyfillToTest}`
+      )
+    }
 
     const e = new Error('require failed for some reason')
-    const restoreTemporalPolyfill = throwErrorOnLoadModule('temporal-polyfill', e)
+    const restoreModuleLoader = throwErrorOnLoad(supportedPolyfills, e)
     try {
       const parseWithFailingRequire = proxyquire('./', {})
       t.throws(
@@ -75,17 +90,18 @@ test('date parser', function (t) {
         "Don't use the missing-Temporal message for unrelated problems"
       )
     } finally {
-      restoreTemporalPolyfill()
+      restoreModuleLoader()
     }
 
     globalThis.Temporal = Temporal
-    const parseWithABrokenPolyfill = proxyquire('./', {
-      'temporal-polyfill': {
+    for (const polyfill of supportedPolyfills) {
+      stubs[polyfill] = {
         get Temporal () {
           throw new Error('shouldn\'t be used')
         }
       }
-    })
+    }
+    const parseWithABrokenPolyfill = proxyquire('./', stubs)
     t.equal(
       parseWithABrokenPolyfill(winter, 'UTC').getTime(),
       new Date('2026-01-13T23:53:08Z').getTime(),
@@ -346,10 +362,10 @@ function withLocalTimeZone (tz, f) {
   }
 }
 
-function throwErrorOnLoadModule (module, error) {
+function throwErrorOnLoad (modules, error) {
   const originalLoad = Module._load
   Module._load = function (request, parent, isMain) {
-    if (request === module) {
+    if (modules.includes(request)) {
       throw error
     }
     return originalLoad.call(this, request, parent, isMain)

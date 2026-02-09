@@ -16,13 +16,28 @@ function temporal () {
   if (globalThis.Temporal !== undefined) {
     return globalThis.Temporal
   }
-  try {
-    return require('temporal-polyfill').Temporal
-  } catch (e) {
-    throw e.code === 'MODULE_NOT_FOUND'
-      ? new Error(MSG_MISSING_TEMPORAL, { cause: e })
-      : e
+  return loadFirstAvailable(['temporal-polyfill', '@js-temporal/polyfill']).Temporal
+}
+
+function loadFirstAvailable (paths) {
+  let error = null
+  let module = null
+  let i
+  for (i = 0; i < paths.length && module === null; i++) {
+    try {
+      module = require(paths[i])
+    } catch (e) {
+      if (error === null) {
+        error = e.code === 'MODULE_NOT_FOUND'
+          ? new Error(MSG_MISSING_TEMPORAL, { cause: e })
+          : e
+      }
+    }
   }
+  if (module === null) {
+    throw error
+  }
+  return module
 }
 
 class PGDateParser {
