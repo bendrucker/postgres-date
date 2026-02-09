@@ -10,35 +10,7 @@ const CHAR_CODE_Z = 'Z'.charCodeAt(0)
 const CHAR_CODE_MINUS = '-'.charCodeAt(0)
 const CHAR_CODE_PLUS = '+'.charCodeAt(0)
 
-const MSG_MISSING_TEMPORAL = 'The Temporal API is required to convert time zones. If your platform does not ship with Temporal, install a polyfill.'
-
-function temporal () {
-  if (globalThis.Temporal !== undefined) {
-    return globalThis.Temporal
-  }
-  return loadFirstAvailable(['temporal-polyfill', '@js-temporal/polyfill']).Temporal
-}
-
-function loadFirstAvailable (paths) {
-  let error = null
-  let module = null
-  let i
-  for (i = 0; i < paths.length && module === null; i++) {
-    try {
-      module = require(paths[i])
-    } catch (e) {
-      if (error === null) {
-        error = e.code === 'MODULE_NOT_FOUND'
-          ? new Error(MSG_MISSING_TEMPORAL, { cause: e })
-          : e
-      }
-    }
-  }
-  if (module === null) {
-    throw error
-  }
-  return module
-}
+const temporal = require('./temporal')
 
 class PGDateParser {
   constructor (dateString, options) {
@@ -166,7 +138,6 @@ class PGDateParser {
       if (this.offset !== undefined) {
         return this.offset * 60 * 1000
       } else if (this.timeZone !== undefined) {
-        // eslint-disable-next-line no-undef
         const pdt = temporal().PlainDateTime.from({
           year: date.year,
           month: date.month + 1,

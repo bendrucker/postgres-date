@@ -1,16 +1,8 @@
 'use strict'
 
-const proxyquire = require('proxyquire').noPreserveCache()
 const test = require('tape')
 const parse = require('./')
 const timezoneMock = require('timezone-mock')
-const { Temporal } = require('temporal-polyfill')
-const Module = require('module')
-
-const supportedPolyfills = [
-  'temporal-polyfill',
-  '@js-temporal/polyfill'
-]
 
 test('date parser', function (t) {
   t.equal(parse('garbage'), null)
@@ -47,69 +39,6 @@ test('date parser', function (t) {
 
   const summer = '2025-06-30 11:57:23'
   const winter = '2026-01-13 23:53:08'
-
-  const oldTemporal = globalThis.Temporal
-  globalThis.Temporal = undefined
-  try {
-    const stubs = {}
-    for (const polyfill of supportedPolyfills) {
-      stubs[polyfill] = null
-    }
-    const parseWithNoTemporal = proxyquire('./', stubs)
-    const expectedCause = new Error("Cannot find module 'temporal-polyfill'")
-    expectedCause.code = 'MODULE_NOT_FOUND'
-    t.throws(
-      () => parseWithNoTemporal(winter, 'UTC'),
-      {
-        message: 'The Temporal API is required to convert time zones. If your platform does not ship with Temporal, install a polyfill.',
-        cause: expectedCause
-      },
-      'Helpful error message if no Temporal is available'
-    )
-
-    for (const polyfillToTest of supportedPolyfills) {
-      for (const polyfillToStub of supportedPolyfills) {
-        stubs[polyfillToStub] =
-          polyfillToTest === polyfillToStub ? require(polyfillToTest) : null
-      }
-      const parseWithPolyfill = proxyquire('./', stubs)
-      t.equal(
-        parseWithPolyfill(winter, 'UTC').getTime(),
-        new Date('2026-01-13T23:53:08Z').getTime(),
-        `Passing time zone with Temporal provided by ${polyfillToTest}`
-      )
-    }
-
-    const e = new Error('require failed for some reason')
-    const restoreModuleLoader = throwErrorOnLoad(supportedPolyfills, e)
-    try {
-      const parseWithFailingRequire = proxyquire('./', {})
-      t.throws(
-        () => parseWithFailingRequire(winter, 'UTC'),
-        e,
-        "Don't use the missing-Temporal message for unrelated problems"
-      )
-    } finally {
-      restoreModuleLoader()
-    }
-
-    globalThis.Temporal = Temporal
-    for (const polyfill of supportedPolyfills) {
-      stubs[polyfill] = {
-        get Temporal () {
-          throw new Error('shouldn\'t be used')
-        }
-      }
-    }
-    const parseWithABrokenPolyfill = proxyquire('./', stubs)
-    t.equal(
-      parseWithABrokenPolyfill(winter, 'UTC').getTime(),
-      new Date('2026-01-13T23:53:08Z').getTime(),
-      'Passing time zone prefers global Temporal over polyfill'
-    )
-  } finally {
-    globalThis.Temporal = oldTemporal
-  }
 
   withLocalTimeZone('US/Eastern', () => {
     t.equal(
@@ -359,19 +288,5 @@ function withLocalTimeZone (tz, f) {
     f()
   } finally {
     timezoneMock.unregister()
-  }
-}
-
-function throwErrorOnLoad (modules, error) {
-  const originalLoad = Module._load
-  Module._load = function (request, parent, isMain) {
-    if (modules.includes(request)) {
-      throw error
-    }
-    return originalLoad.call(this, request, parent, isMain)
-  }
-
-  return () => {
-    Module._load = originalLoad
   }
 }

@@ -14,7 +14,7 @@
     "node": ">=20"
   },
   "scripts": {
-    "test": "standard && tape test.js && tsd"
+    "test": "standard && tape test.js test-temporal.js && tsd"
   },
   "keywords": [
     "postgres",
