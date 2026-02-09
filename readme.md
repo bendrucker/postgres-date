@@ -22,7 +22,17 @@ npm install --save postgres-date
 const parse = require('postgres-date')
 parse('2011-01-23 22:15:51Z')
 // => 2011-01-23T22:15:51.000Z
+parse('2011-01-23 22:15:51', 'America/New_York')
+// => 2011-01-23T22:15:51.000-05:00
 ```
+
+## Time Zone parsing
+
+If the Postgres date or time string is provided without a time zone,
+`postgres-date` will interpret it with the JS environment's local time
+zone by default. Parsing to an alternate time zone requires the
+`Temporal` API. If `Temporal` is not available globally in your
+environment, install [`temporal-polyfill`](https://www.npmjs.com/package/temporal-polyfill).
 
 ## API
 
@@ -46,9 +56,8 @@ Default: Local time zone
 Time zone for interpretation of Postgres timestamps without time zone.
 
 If a string, any IANA time zone name (such as `America/Los_Angeles`). If
-a string is provided, `postgres-date` will load a `Temporal` polyfill to
-perform the offset calculation. The polyfill requires Node 14+, Chrome
-60+, Firefox 55+, Safari 11.1+, Safari iOS 11.3+ or Edge 79+.
+a string is provided, `postgres-date` will attempt to import
+`temporal-polyfill` to perform the offset calculation.
 
 If a number, a numeric offset in minutes ahead of UTC.
 
