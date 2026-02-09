@@ -18,8 +18,24 @@ class PGDateParser {
     this.pos = 0
     this.stringLen = dateString.length
 
+    if (options === null) {
+      options = undefined
+    }
+
     if (typeof options === 'object') {
-      this.timeZone = options.timeZone
+      if (options.timeZone !== undefined && options.offset !== undefined) {
+        throw new TypeError("'offset' cannot be combined with 'timeZone'")
+      }
+      if (typeof options.timeZone === 'string') {
+        this.timeZone = options.timeZone
+      } else if (options.timeZone !== undefined) {
+        throw new TypeError(`Expected string time zone name, got timeZone=${options.timeZone.toString()}`)
+      }
+      if (typeof options.offset === 'number') {
+        this.offset = options.offset
+      } else if (options.offset !== undefined) {
+        throw new TypeError(`Expected numeric offset in minutes ahead of UTC, got offset=${options.offset.toString()}`)
+      }
       if (options.disambiguation === undefined || options.disambiguation === 'postgres') {
         this.disambiguation = 'later'
       } else if (options.disambiguation === 'javascript') {

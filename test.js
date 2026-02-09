@@ -42,6 +42,12 @@ test('date parser', function (t) {
 
   withLocalTimeZone('US/Eastern', () => {
     t.equal(
+      parse(winter, null).getTime(),
+      new Date('2026-01-13T23:53:08-05:00').getTime(),
+      'Accepts null time zone'
+    )
+
+    t.equal(
       parse(winter, 'UTC').getTime(),
       new Date('2026-01-13T23:53:08Z').getTime(),
       'client behind server'
@@ -116,7 +122,31 @@ test('date parser', function (t) {
   t.equal(
     parse(winter, { timeZone: 'America/New_York' }).getTime(),
     new Date('2026-01-13T23:53:08-05:00').getTime(),
-    'Allows timeZone as object'
+    'Accepts options object with timeZone'
+  )
+
+  t.throws(
+    () => parse(winter, { timeZone: 300 }),
+    /string/,
+    'Enforces timeZone type in options object'
+  )
+
+  t.equal(
+    parse(winter, { offset: -300 }).getTime(),
+    new Date('2026-01-13T23:53:08-05:00').getTime(),
+    'Accepts options object with offset'
+  )
+
+  t.throws(
+    () => parse(winter, { offset: 'America/New_York' }),
+    /numeric/,
+    'Enforces offset type in options object'
+  )
+
+  t.throws(
+    () => parse(winter, { timeZone: 'America/New_York', offset: -300 }),
+    /'offset' cannot be combined with 'timeZone'/,
+    'Offset and timeZone are mutually exclusive'
   )
 
   t.equal(

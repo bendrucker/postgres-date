@@ -39,7 +39,8 @@ or [`@js-temporal/polyfill`](https://www.npmjs.com/package/@js-temporal/polyfill
 
 #### `parse(isoDate)` -> `date`
 #### `parse(isoDate, tzNameOrOffset)` -> `date`
-#### `parse(isoDate, { timeZone: nameOrOffset, disambiguation: str})` -> `date`
+#### `parse(isoDate, { timeZone: str, disambiguation: str})` -> `date`
+#### `parse(isoDate, { offset: number, disambiguation: str})` -> `date`
 
 ##### isoDate
 
@@ -65,10 +66,20 @@ If a number, a numeric offset in minutes ahead of UTC.
 ##### timeZone
 
 *Optional*  
-Type: `string` or `number`  
+Type: `string`
 Default: Local time zone
 
-Same as `tzNameOrOffset`, above.
+Time zone string, interpreted as in `tzNameOrOffset` above. Cannot be
+combined with `offset`.
+
+##### offset
+
+*Optional*  
+Type: `number`
+Default: Local time zone
+
+Numeric offset in minutes ahead of UTC. Cannot be combined with
+`timeZone`.
 
 ##### disambiguation
 

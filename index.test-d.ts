@@ -13,9 +13,10 @@ expectType<Date | number | null>(parse('2010-12-11 09:09:04', 840)) // UTC +14 (
 expectType<Date | number | null>(parse('2010-12-11 09:09:04', -720)) // UTC -12 (Baker Island)
 expectType<Date | number | null>(parse('2010-12-11 09:09:04', {}))
 expectType<Date | number | null>(parse('2010-12-11 09:09:04', { timeZone: 'America/New York' }))
-expectType<Date | number | null>(parse('2010-12-11 09:09:04', { timeZone: 123 }))
+expectType<Date | number | null>(parse('2010-12-11 09:09:04', { offset: 123 }))
 expectType<Date | number | null>(parse('2010-12-11 09:09:04', { disambiguation: 'javascript' }))
 expectType<Date | number | null>(parse('2010-12-11 09:09:04', { timeZone: 'America/New York', disambiguation: 'reject' }))
+expectType<Date | number | null>(parse('2010-12-11 09:09:04', { offset: 123, disambiguation: 'reject' }))
 expectType<Date | number | null>(parse('2010-12-11 09:09:04', { disambiguation: 'postgres' }))
 expectType<Date | number | null>(parse('2010-12-11 09:09:04', { disambiguation: 'earlier' }))
 expectType<Date | number | null>(parse('2010-12-11 09:09:04', { disambiguation: 'later' }))
@@ -25,4 +26,8 @@ expectError(parse(1625042787))
 expectError(parse(new Date()))
 
 // 'compatible' is too ambiguous in this context; 'compatible with postgres' or 'compatible with JavaScript'?
+expectError(parse('2010-12-11 09:09:04', null)) // Technically works but shouldn't be encouraged
+expectError(parse('2010-12-11 09:09:04', { timeZone: 123 }))
+expectError(parse('2010-12-11 09:09:04', { offset: 'America/New_York' }))
+expectError(parse('2010-12-11 09:09:04', { timeZone: 'America/New_York', offset: 123 }))
 expectError(parse('2010-12-11 09:09:04', { disambiguation: 'compatible' }))
