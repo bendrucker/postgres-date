@@ -59,7 +59,8 @@ Time zone for interpretation of Postgres timestamps without time zone.
 
 If a string, any IANA time zone name (such as `America/Los_Angeles`). If
 a string is provided, `postgres-date` will attempt to import
-`temporal-polyfill` to perform the offset calculation.
+`temporal-polyfill` or `@js-temporal/polyfill` to perform the offset
+calculation.
 
 If a number, a numeric offset in minutes ahead of UTC.
 
