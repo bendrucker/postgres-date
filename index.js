@@ -10,8 +10,6 @@ const CHAR_CODE_Z = 'Z'.charCodeAt(0)
 const CHAR_CODE_MINUS = '-'.charCodeAt(0)
 const CHAR_CODE_PLUS = '+'.charCodeAt(0)
 
-const temporal = require('./temporal')
-
 class PGDateParser {
   constructor (dateString, options) {
     this.dateString = dateString
@@ -23,6 +21,7 @@ class PGDateParser {
     }
 
     if (typeof options === 'object') {
+      this.temporal = options.temporal
       if (options.timeZone !== undefined && options.offset !== undefined) {
         throw new TypeError("'offset' cannot be combined with 'timeZone'")
       }
@@ -154,7 +153,8 @@ class PGDateParser {
       if (this.offset !== undefined) {
         return this.offset * 60 * 1000
       } else if (this.timeZone !== undefined) {
-        const pdt = temporal().PlainDateTime.from({
+        const Temporal = this.temporal ?? require('./temporal')()
+        const pdt = Temporal.PlainDateTime.from({
           year: date.year,
           month: date.month + 1,
           day: date.day,

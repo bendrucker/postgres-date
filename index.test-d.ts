@@ -1,4 +1,9 @@
 import { expectType, expectError } from 'tsd'
+import { Temporal as TemporalPolyfill } from 'temporal-polyfill'
+
+declare global {
+  var Temporal: typeof TemporalPolyfill
+}
 
 import parse from '.'
 
@@ -15,8 +20,9 @@ expectType<Date | number | null>(parse('2010-12-11 09:09:04', {}))
 expectType<Date | number | null>(parse('2010-12-11 09:09:04', { timeZone: 'America/New York' }))
 expectType<Date | number | null>(parse('2010-12-11 09:09:04', { offset: 123 }))
 expectType<Date | number | null>(parse('2010-12-11 09:09:04', { disambiguation: 'javascript' }))
-expectType<Date | number | null>(parse('2010-12-11 09:09:04', { timeZone: 'America/New York', disambiguation: 'reject' }))
-expectType<Date | number | null>(parse('2010-12-11 09:09:04', { offset: 123, disambiguation: 'reject' }))
+expectType<Date | number | null>(parse('2010-12-11 09:09:04', { temporal: Temporal }))
+expectType<Date | number | null>(parse('2010-12-11 09:09:04', { timeZone: 'America/New York', disambiguation: 'reject', temporal: Temporal }))
+expectType<Date | number | null>(parse('2010-12-11 09:09:04', { offset: 123, disambiguation: 'reject', temporal: Temporal }))
 expectType<Date | number | null>(parse('2010-12-11 09:09:04', { disambiguation: 'postgres' }))
 expectType<Date | number | null>(parse('2010-12-11 09:09:04', { disambiguation: 'earlier' }))
 expectType<Date | number | null>(parse('2010-12-11 09:09:04', { disambiguation: 'later' }))
@@ -31,3 +37,4 @@ expectError(parse('2010-12-11 09:09:04', { timeZone: 123 }))
 expectError(parse('2010-12-11 09:09:04', { offset: 'America/New_York' }))
 expectError(parse('2010-12-11 09:09:04', { timeZone: 'America/New_York', offset: 123 }))
 expectError(parse('2010-12-11 09:09:04', { disambiguation: 'compatible' }))
+expectError(parse('2010-12-11 09:09:04', { temporal: {} }))

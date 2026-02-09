@@ -1,14 +1,12 @@
-export type PgDateDisambiguation = 'earlier' | 'later' | 'reject' | 'postgres' | 'javascript'
+type MaybeTemporal = typeof globalThis extends { Temporal: infer T } ? T : unknown;
 
-interface ParseDateTimeZoneOptions {
-  timeZone?: string,
-  disambiguation?: PgDateDisambiguation,
+interface ParseDateBaseOptions {
+  disambiguation?: 'earlier' | 'later' | 'reject' | 'postgres' | 'javascript';
+  temporal?: MaybeTemporal;
 }
 
-interface ParseDateOffsetOptions {
-  offset?: number;
-  disambiguation?: PgDateDisambiguation;
-}
+type ParseDateTimeZoneOptions = ParseDateBaseOptions & { timeZone?: string };
+type ParseDateOffsetOptions = ParseDateBaseOptions & { offset?: number };
 
 export type ParseDateOptions = ParseDateTimeZoneOptions | ParseDateOffsetOptions;
 

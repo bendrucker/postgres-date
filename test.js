@@ -3,6 +3,8 @@
 const test = require('tape')
 const parse = require('./')
 const timezoneMock = require('timezone-mock')
+const proxyquire = require('proxyquire').noPreserveCache()
+const { Temporal } = require('temporal-polyfill')
 
 test('date parser', function (t) {
   t.equal(parse('garbage'), null)
@@ -237,6 +239,17 @@ test('date parser', function (t) {
     parse(fallBackLocalStr, { timeZone: 'America/New_York' }).getTime(),
     parse(fallBackLocalStr, { timeZone: 'America/New_York', disambiguation: 'postgres' }).getTime(),
     'disambiguation defaults to postgres (fall back, disambiguation omitted from options object)'
+  )
+
+  const parseWithNoTemporal = proxyquire('./', {
+    './temporal': null
+  })
+  t.equal(
+    parseWithNoTemporal(winter, {
+      timeZone: 'America/New_York',
+      temporal: Temporal
+    }).getTime(),
+    new Date('2026-01-13T23:53:08-05:00').getTime()
   )
 
   function ms (string) {

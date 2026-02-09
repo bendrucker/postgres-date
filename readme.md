@@ -39,8 +39,8 @@ or [`@js-temporal/polyfill`](https://www.npmjs.com/package/@js-temporal/polyfill
 
 #### `parse(isoDate)` -> `date`
 #### `parse(isoDate, tzNameOrOffset)` -> `date`
-#### `parse(isoDate, { timeZone: str, disambiguation: str})` -> `date`
-#### `parse(isoDate, { offset: number, disambiguation: str})` -> `date`
+#### `parse(isoDate, { timeZone: str, disambiguation: str, temporal: Temporal })` -> `date`
+#### `parse(isoDate, { offset: number, disambiguation: str, temporal: Temporal })` -> `date`
 
 ##### isoDate
 
@@ -60,7 +60,7 @@ Time zone for interpretation of Postgres timestamps without time zone.
 If a string, any IANA time zone name (such as `America/Los_Angeles`). If
 a string is provided, `postgres-date` will attempt to import
 `temporal-polyfill` or `@js-temporal/polyfill` to perform the offset
-calculation.
+calculation. To use a custom polyfill instead, see `temporal`, below.
 
 If a number, a numeric offset in minutes ahead of UTC.
 
@@ -106,6 +106,17 @@ multiple times (e.g. Daylight Saving Time).
 The allowed values are similar to, but not exactly the same as, the
 corresponding option in
 [`Temporal.ZonedDateTime`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime#ambiguity_and_gaps_from_local_time_to_utc_time).
+
+##### temporal
+
+*Optional*  
+Type: `Temporal`  
+Default: Global `Temporal`, or an installed supported polyfill.
+
+Allows passing a custom `Temporal` implementation, in case none of the
+supported polyfills are available. If your platform supports `Temporal`,
+or if you have `temporal-polyfill` or `@js-temporal/polyfill` installed,
+you shouldn't need this option.
 
 ## Releases
 
