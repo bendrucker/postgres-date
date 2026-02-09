@@ -1,7 +1,5 @@
 const test = require('tape')
 const proxyquire = require('proxyquire').noPreserveCache()
-const { Temporal } = require('temporal-polyfill')
-const { Temporal: Temporal2 } = require('@js-temporal/polyfill')
 const Module = require('module')
 
 const supportedPolyfills = [
@@ -9,38 +7,13 @@ const supportedPolyfills = [
   '@js-temporal/polyfill'
 ]
 
-// temporal-polyfill, and some browsers, does not parse the Zulu
+// temporal-polyfill, and some browsers, do not parse the Zulu
 // abbreviation correctly
+// https://github.com/fullcalendar/temporal-polyfill/issues/86
+// https://github.com/js-temporal/temporal-polyfill/issues/356
+// https://bugzilla.mozilla.org/show_bug.cgi?id=2015575
 const testTimeStrTemporal = '2026-02-09T10:14:34[UTC]'
 const testTimeStrIso = '2026-02-09T10:14:34Z'
-
-// temporal-polyfill does not parse some ISO strings correctly
-test('temporal-polyfill', t => {
-  t.equal(
-    Temporal.ZonedDateTime.from(testTimeStrIso).epochMilliseconds,
-    new Date(testTimeStrIso).getTime()
-  )
-  t.end()
-})
-
-// @js-temporal/polyfill does not parse some ISO strings correctly
-test('@js-temporal/polyfill', t => {
-  t.equal(
-    Temporal2.ZonedDateTime.from(testTimeStrIso).epochMilliseconds,
-    new Date(testTimeStrIso).getTime()
-  )
-  t.end()
-})
-
-// const assert = require('assert')
-// assert.equal(
-//   Temporal.ZonedDateTime.from(testTimeStrIso).epochMilliseconds,
-//   new Date(testTimeStrIso).getTime()
-// )
-// assert.equal(
-//   Temporal2.ZonedDateTime.from(testTimeStrIso).epochMilliseconds,
-//   new Date(testTimeStrIso).getTime()
-// )
 
 test('temporal polyfill loader', t => {
   const oldTemporal = globalThis.Temporal
