@@ -88,6 +88,25 @@ test('temporal polyfill loader', t => {
       restoreModuleLoader()
     }
 
+    if (supportedPolyfills.length > 1) {
+      const restoreModuleLoader = throwErrorOnLoad([supportedPolyfills[1]], e)
+      try {
+        for (let i = 0; i < supportedPolyfills.length; i++) {
+          if (i !== 1) {
+            stubs[i] = null
+          }
+        }
+        const withFailingRequire = proxyquire('./temporal', stubs)
+        t.throws(
+          () => withFailingRequire(),
+          e,
+          'Prefer to show errors related to polyfills that are installed but failed to load'
+        )
+      } finally {
+        restoreModuleLoader()
+      }
+    }
+
     globalThis.Temporal = Temporal
     for (const polyfill of supportedPolyfills) {
       stubs[polyfill] = {
