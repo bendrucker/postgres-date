@@ -1,6 +1,7 @@
 const test = require('tape')
 const proxyquire = require('proxyquire').noPreserveCache()
 const Module = require('module')
+const { Temporal } = require('temporal-polyfill')
 
 const supportedPolyfills = [
   'temporal-polyfill',
@@ -66,7 +67,7 @@ test('temporal polyfill loader', t => {
       try {
         for (let i = 0; i < supportedPolyfills.length; i++) {
           if (i !== 1) {
-            stubs[i] = null
+            stubs[supportedPolyfills[i]] = null
           }
         }
         const withFailingRequire = proxyquire('./temporal', stubs)

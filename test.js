@@ -49,6 +49,12 @@ test('date parser', function (t) {
       'Accepts null time zone'
     )
 
+    t.throws(
+      () => parse(winter, false),
+      TypeError,
+      'Rejects invalid option type (boolean)'
+    )
+
     t.equal(
       parse(winter, 'UTC').getTime(),
       new Date('2026-01-13T23:53:08Z').getTime(),
