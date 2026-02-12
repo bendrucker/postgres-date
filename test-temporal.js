@@ -59,13 +59,14 @@ test('temporal polyfill loader', t => {
     }
 
     if (supportedPolyfills.length > 1) {
-      const restoreModuleLoader = throwErrorOnLoad([supportedPolyfills[1]], e)
-      try {
-        for (let i = 0; i < supportedPolyfills.length; i++) {
-          if (i !== 1) {
-            stubs[supportedPolyfills[i]] = null
-          }
+      for (let i = 0; i < supportedPolyfills.length; i++) {
+        if (i !== 1) {
+          stubs[supportedPolyfills[i]] = null
         }
+      }
+
+      const restoreFromPolyfillLoadError = throwErrorOnLoad([supportedPolyfills[1]], e)
+      try {
         const withFailingRequire = proxyquire('./temporal', stubs)
         t.throws(
           () => withFailingRequire(),
@@ -73,7 +74,21 @@ test('temporal polyfill loader', t => {
           'Prefer to show errors related to polyfills that are installed but failed to load'
         )
       } finally {
-        restoreModuleLoader()
+        restoreFromPolyfillLoadError()
+      }
+
+      const failedTransitive = new Error("Cannot find module 'transitive-dependency'")
+      failedTransitive.code = 'MODULE_NOT_FOUND'
+      const restoreFromMissingTransitive = throwErrorOnLoad(supportedPolyfills[1], failedTransitive)
+      try {
+        const withFailingTransitive = proxyquire('./temporal', stubs)
+        t.throws(
+          () => withFailingTransitive(),
+          failedTransitive,
+          'Treat missing-module errors from sub-dependencies as regular errors, not missing Temporal'
+        )
+      } finally {
+        restoreFromMissingTransitive()
       }
     }
 

@@ -16,9 +16,9 @@ function loadFirstAvailable (paths) {
       module = require(paths[i])
     } catch (e) {
       // Error precedence:
-      // 1. First error other than MODULE_NOT_FOUND
-      // 2. MODULE_NOT_FOUND for most preferred polyfill
-      if (e.code === 'MODULE_NOT_FOUND') {
+      // 1. First error other than MODULE_NOT_FOUND for supported polyfills
+      // 2. MODULE_NOT_FOUND for most preferred polyfill (first in list)
+      if (e.code === 'MODULE_NOT_FOUND' && e.message.includes(`'${paths[i]}'`)) {
         error = error ?? new Error(MSG_MISSING_TEMPORAL, { cause: e })
       } else {
         error = error?.message === MSG_MISSING_TEMPORAL ? e : (error ?? e)
