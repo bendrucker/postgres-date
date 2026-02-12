@@ -51,8 +51,14 @@ test('date parser', function (t) {
 
     t.throws(
       () => parse(winter, false),
-      TypeError,
+      /Unexpected value of type 'boolean' for postgres-date parser options/,
       'Rejects invalid option type (boolean)'
+    )
+
+    t.throws(
+      () => parse(winter, () => {}),
+      /Unexpected value of type 'function' for postgres-date parser options/,
+      'Rejects invalid option type (function)'
     )
 
     t.equal(
@@ -135,7 +141,7 @@ test('date parser', function (t) {
 
   t.throws(
     () => parse(winter, { timeZone: 300 }),
-    /string/,
+    /options.timeZone expected type 'string'/,
     'Enforces timeZone type in options object'
   )
 
@@ -147,7 +153,7 @@ test('date parser', function (t) {
 
   t.throws(
     () => parse(winter, { offset: 'America/New_York' }),
-    /numeric/,
+    /options.offset expected numeric /,
     'Enforces offset type in options object'
   )
 

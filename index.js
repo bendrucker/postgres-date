@@ -20,7 +20,13 @@ class PGDateParser {
       options = undefined
     }
 
-    if (typeof options === 'object') {
+    const optionsType = typeof options
+    if (options === undefined || optionsType === 'string') {
+      this.timeZone = options
+      this.disambiguation = 'later' // Consistent with Postgres
+    } else if (optionsType === 'number') {
+      this.offset = options
+    } else if (optionsType === 'object') {
       this.temporal = options.temporal
       if (options.timeZone !== undefined && options.offset !== undefined) {
         throw new TypeError("'offset' cannot be combined with 'timeZone'")
@@ -28,12 +34,12 @@ class PGDateParser {
       if (typeof options.timeZone === 'string') {
         this.timeZone = options.timeZone
       } else if (options.timeZone !== undefined) {
-        throw new TypeError(`Expected string time zone name, got timeZone=${options.timeZone.toString()}`)
+        throw new TypeError(`options.timeZone expected type 'string', got timeZone=${options.timeZone.toString()}`)
       }
       if (typeof options.offset === 'number') {
         this.offset = options.offset
       } else if (options.offset !== undefined) {
-        throw new TypeError(`Expected numeric offset in minutes ahead of UTC, got offset=${options.offset.toString()}`)
+        throw new TypeError(`options.offset expected numeric minutes ahead of UTC, got offset=${options.offset.toString()}`)
       }
       if (options.disambiguation === undefined || options.disambiguation === 'postgres') {
         this.disambiguation = 'later'
@@ -42,11 +48,8 @@ class PGDateParser {
       } else {
         this.disambiguation = options.disambiguation
       }
-    } else if (typeof options === 'number') {
-      this.offset = options
     } else {
-      this.timeZone = options
-      this.disambiguation = 'later' // Consistent with Postgres
+      throw new TypeError(`Unexpected value of type '${optionsType}' for postgres-date parser options`)
     }
   }
 
