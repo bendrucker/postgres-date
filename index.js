@@ -10,6 +10,8 @@ const CHAR_CODE_Z = 'Z'.charCodeAt(0)
 const CHAR_CODE_MINUS = '-'.charCodeAt(0)
 const CHAR_CODE_PLUS = '+'.charCodeAt(0)
 
+const VALID_DISAMBIGUATIONS = ['earlier', 'later', 'postgres', 'javascript', 'reject']
+
 class PGDateParser {
   constructor (dateString, options) {
     this.dateString = dateString
@@ -48,8 +50,10 @@ class PGDateParser {
         this.disambiguation = 'later'
       } else if (options.disambiguation === 'javascript') {
         this.disambiguation = 'compatible'
-      } else {
+      } else if (VALID_DISAMBIGUATIONS.includes(options.disambiguation)) {
         this.disambiguation = options.disambiguation
+      } else {
+        throw new TypeError('Unexpected value for options.disambiguation; expected one of ' + VALID_DISAMBIGUATIONS.join(', '))
       }
     } else {
       throw new TypeError(`Unexpected value of type '${optionsType}' for postgres-date parser options`)

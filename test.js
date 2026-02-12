@@ -235,6 +235,21 @@ test('date parser', function (t) {
     'disambiguation and offset are mutually exclusive'
   )
 
+  t.throws(
+    () => parse(springForwardLocalStr, { disambiguation: 'rject' }),
+    /Unexpected value for options.disambiguation; expected one of /,
+    'disambiguation enforces allowed values ("rject")'
+  )
+
+  // 'compatible' is valid in Temporal but not in postgres-date, since
+  // it admits ambiguity as to which system the operation should be
+  // compatible with (EcmaScript or Postgres)
+  t.throws(
+    () => parse(springForwardLocalStr, { disambiguation: 'compatible' }),
+    /Unexpected value for options.disambiguation; expected one of /,
+    'disambiguation enforces allowed values ("compatible")'
+  )
+
   t.equal(
     parse(springForwardLocalStr, 'America/New_York').getTime(),
     parse(springForwardLocalStr, { timeZone: 'America/New_York', disambiguation: 'postgres' }).getTime(),
