@@ -40,7 +40,7 @@ or [`@js-temporal/polyfill`](https://www.npmjs.com/package/@js-temporal/polyfill
 #### `parse(isoDate)` -> `date`
 #### `parse(isoDate, tzNameOrOffset)` -> `date`
 #### `parse(isoDate, { timeZone: str, disambiguation: str, temporal: Temporal })` -> `date`
-#### `parse(isoDate, { offset: number, disambiguation: str, temporal: Temporal })` -> `date`
+#### `parse(isoDate, { offset: number, temporal: Temporal })` -> `date`
 
 ##### isoDate
 
@@ -106,6 +106,9 @@ multiple times (e.g. Daylight Saving Time).
 The allowed values are similar to, but not exactly the same as, the
 corresponding option in
 [`Temporal.ZonedDateTime`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Temporal/ZonedDateTime#ambiguity_and_gaps_from_local_time_to_utc_time).
+
+This parameter is not compatible with `offset`, since there is no need
+to disambiguate when the offset is given explicitly.
 
 ##### temporal
 

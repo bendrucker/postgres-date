@@ -37,6 +37,9 @@ class PGDateParser {
         throw new TypeError(`options.timeZone expected type 'string', got timeZone=${options.timeZone.toString()}`)
       }
       if (typeof options.offset === 'number') {
+        if (options.disambiguation !== undefined) {
+          throw new TypeError("'disambiguation' cannot be specified with a fixed offset")
+        }
         this.offset = options.offset
       } else if (options.offset !== undefined) {
         throw new TypeError(`options.offset expected numeric minutes ahead of UTC, got offset=${options.offset.toString()}`)

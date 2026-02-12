@@ -26,7 +26,7 @@ expectType<Date | number | null>(parse('2010-12-11 09:09:04', { offset: 123 }))
 expectType<Date | number | null>(parse('2010-12-11 09:09:04', { disambiguation: 'javascript' }))
 expectType<Date | number | null>(parse('2010-12-11 09:09:04', { temporal: Temporal }))
 expectType<Date | number | null>(parse('2010-12-11 09:09:04', { timeZone: 'America/New York', disambiguation: 'reject', temporal: Temporal }))
-expectType<Date | number | null>(parse('2010-12-11 09:09:04', { offset: 123, disambiguation: 'reject', temporal: Temporal }))
+expectType<Date | number | null>(parse('2010-12-11 09:09:04', { offset: 123, temporal: Temporal }))
 expectType<Date | number | null>(parse('2010-12-11 09:09:04', { disambiguation: 'postgres' }))
 expectType<Date | number | null>(parse('2010-12-11 09:09:04', { disambiguation: 'earlier' }))
 expectType<Date | number | null>(parse('2010-12-11 09:09:04', { disambiguation: 'later' }))
@@ -39,6 +39,7 @@ expectError(parse('2010-12-11 09:09:04', null)) // Technically works but shouldn
 expectError(parse('2010-12-11 09:09:04', { timeZone: 123 }))
 expectError(parse('2010-12-11 09:09:04', { offset: 'America/New_York' }))
 expectError(parse('2010-12-11 09:09:04', { timeZone: 'America/New_York', offset: 123 }))
+expectError(parse('2010-12-11 09:09:04', { offset: 123, disambiguation: 'reject' }))
 expectError(parse('2010-12-11 09:09:04', { temporal: {} }))
 
 // 'compatible' is too ambiguous in this context; 'compatible with postgres' or 'compatible with JavaScript'?

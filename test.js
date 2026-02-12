@@ -229,6 +229,12 @@ test('date parser', function (t) {
     '"reject" disambiguation rejects ambiguous timestamp'
   )
 
+  t.throws(
+    () => parse(springForwardLocalStr, { offset: 123, disambiguation: 'later' }),
+    /'disambiguation' cannot be specified with a fixed offset/,
+    'disambiguation and offset are mutually exclusive'
+  )
+
   t.equal(
     parse(springForwardLocalStr, 'America/New_York').getTime(),
     parse(springForwardLocalStr, { timeZone: 'America/New_York', disambiguation: 'postgres' }).getTime(),
