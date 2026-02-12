@@ -8,11 +8,7 @@ const supportedPolyfills = [
   '@js-temporal/polyfill'
 ]
 
-// temporal-polyfill, and some browsers, do not parse the Zulu
-// abbreviation correctly
-// https://github.com/fullcalendar/temporal-polyfill/issues/86
-// https://github.com/js-temporal/temporal-polyfill/issues/356
-// https://bugzilla.mozilla.org/show_bug.cgi?id=2015575
+// Temporal.ZonedDateTime.from does not accept ISO 8601
 const testTimeStrTemporal = '2026-02-09T10:14:34[UTC]'
 const testTimeStrIso = '2026-02-09T10:14:34Z'
 
