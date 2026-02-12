@@ -62,6 +62,18 @@ test('date parser', function (t) {
     )
 
     t.equal(
+      parse('2011-01-23 10:15:51-04', 'UTC').toString(),
+      new Date('2011-01-23T10:15:51-04:00').toString(),
+      'Prefers offset in string over timeZone parameter'
+    )
+
+    t.equal(
+      parse('2011-01-23 10:15:51-04', 0).toString(),
+      new Date('2011-01-23T10:15:51-04:00').toString(),
+      'Prefers offset in string over offset parameter'
+    )
+
+    t.equal(
       parse(winter, 'UTC').getTime(),
       new Date('2026-01-13T23:53:08Z').getTime(),
       'client behind server'

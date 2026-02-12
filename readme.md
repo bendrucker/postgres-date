@@ -35,6 +35,10 @@ zone by default. Parsing to an alternate time zone requires the
 environment, install [`temporal-polyfill`](https://www.npmjs.com/package/temporal-polyfill)
 or [`@js-temporal/polyfill`](https://www.npmjs.com/package/@js-temporal/polyfill).
 
+If the Postgres date or time string includes a time zone or offset (such
+as `timestamptz`), any time zone arguments are disregarded; the offset
+or time zone from the database takes precedence.
+
 ## API
 
 #### `parse(isoDate)` -> `date`
@@ -55,7 +59,9 @@ A date string from Postgres.
 Type: `string` or `number`  
 Default: Local time zone
 
-Time zone for interpretation of Postgres timestamps without time zone.
+Time zone for interpretation of Postgres dates and times without time
+zone. For Postgres dates and times with a time zone, this parameter is
+disregarded.
 
 If a string, any IANA time zone name (such as `America/Los_Angeles`). If
 a string is provided, `postgres-date` will attempt to import
@@ -71,7 +77,8 @@ Type: `string`
 Default: Local time zone
 
 Time zone string, interpreted as in `tzNameOrOffset` above. Cannot be
-combined with `offset`.
+combined with `offset`. For Postgres dates and times with a time zone,
+this parameter is disregarded.
 
 ##### offset
 
@@ -80,7 +87,8 @@ Type: `number`
 Default: Local time zone
 
 Numeric offset in minutes ahead of UTC. Cannot be combined with
-`timeZone`.
+`timeZone`. For Postgres dates and times with a time zone, this
+parameter is disregarded.
 
 ##### disambiguation
 
