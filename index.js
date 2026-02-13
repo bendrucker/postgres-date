@@ -10,7 +10,7 @@ const CHAR_CODE_Z = 'Z'.charCodeAt(0)
 const CHAR_CODE_MINUS = '-'.charCodeAt(0)
 const CHAR_CODE_PLUS = '+'.charCodeAt(0)
 
-const VALID_DISAMBIGUATIONS = ['earlier', 'later', 'postgres', 'javascript', 'reject']
+export const VALID_DISAMBIGUATIONS = ['earlier', 'later', 'postgres', 'javascript', 'reject']
 
 class PGDateParser {
   constructor (dateString, options) {

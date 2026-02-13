@@ -5,7 +5,7 @@ declare global {
   var Temporal: typeof TemporalPolyfill
 }
 
-import parse, {ParseDateOptions} from '.'
+import parse, {type ParseDateOptions, VALID_DISAMBIGUATIONS} from '.'
 
 //@ts-expect-error
 const invalid: ParseDateOptions = { timeZone: 'America/New York', offset: 123 }
@@ -30,6 +30,7 @@ expectType<Date | number | null>(parse('2010-12-11 09:09:04', { offset: 123, tem
 expectType<Date | number | null>(parse('2010-12-11 09:09:04', { disambiguation: 'postgres' }))
 expectType<Date | number | null>(parse('2010-12-11 09:09:04', { disambiguation: 'earlier' }))
 expectType<Date | number | null>(parse('2010-12-11 09:09:04', { disambiguation: 'later' }))
+expectType<Date | number | null>(parse('2010-12-11 09:09:04', { disambiguation: 'later' as typeof VALID_DISAMBIGUATIONS[number] }))
 expectType<null>(parse(null))
 expectType<null>(parse(undefined))
 expectError(parse(1625042787))

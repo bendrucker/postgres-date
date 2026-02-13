@@ -1,12 +1,15 @@
 type MaybeTemporal = typeof globalThis extends { Temporal: infer T } ? T : unknown;
 
+export type Disambiguation = 'earlier' | 'later' | 'reject' | 'postgres' | 'javascript';
+export const VALID_DISAMBIGUATIONS: Disambiguation[];
+
 interface ParseDateBaseOptions {
   temporal?: MaybeTemporal;
 }
 
 type ParseDateTimeZoneOptions = ParseDateBaseOptions & {
   timeZone?: string,
-  disambiguation?: 'earlier' | 'later' | 'reject' | 'postgres' | 'javascript';
+  disambiguation?: Disambiguation;
   offset?: never
 };
 type ParseDateOffsetOptions = ParseDateBaseOptions & { offset?: number, timeZone?: never, disambiguation?: never };
