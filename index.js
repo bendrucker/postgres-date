@@ -10,11 +10,54 @@ const CHAR_CODE_Z = 'Z'.charCodeAt(0)
 const CHAR_CODE_MINUS = '-'.charCodeAt(0)
 const CHAR_CODE_PLUS = '+'.charCodeAt(0)
 
+export const VALID_DISAMBIGUATIONS = ['earlier', 'later', 'postgres', 'javascript', 'reject']
+
 class PGDateParser {
-  constructor (dateString) {
+  constructor (dateString, options) {
     this.dateString = dateString
     this.pos = 0
     this.stringLen = dateString.length
+
+    if (options === null) {
+      options = undefined
+    }
+
+    const optionsType = typeof options
+    if (options === undefined || optionsType === 'string') {
+      this.timeZone = options
+      this.disambiguation = 'later' // Consistent with Postgres
+    } else if (optionsType === 'number') {
+      this.offset = options
+    } else if (optionsType === 'object') {
+      this.temporal = options.temporal
+      if (options.timeZone !== undefined && options.offset !== undefined) {
+        throw new TypeError("'offset' cannot be combined with 'timeZone'")
+      }
+      if (typeof options.timeZone === 'string') {
+        this.timeZone = options.timeZone
+      } else if (options.timeZone !== undefined) {
+        throw new TypeError(`options.timeZone expected type 'string', got timeZone=${options.timeZone.toString()}`)
+      }
+      if (typeof options.offset === 'number') {
+        if (options.disambiguation !== undefined) {
+          throw new TypeError("'disambiguation' cannot be specified with a fixed offset")
+        }
+        this.offset = options.offset
+      } else if (options.offset !== undefined) {
+        throw new TypeError(`options.offset expected numeric minutes ahead of UTC, got offset=${options.offset.toString()}`)
+      }
+      if (options.disambiguation === undefined || options.disambiguation === 'postgres') {
+        this.disambiguation = 'later'
+      } else if (options.disambiguation === 'javascript') {
+        this.disambiguation = 'compatible'
+      } else if (VALID_DISAMBIGUATIONS.includes(options.disambiguation)) {
+        this.disambiguation = options.disambiguation
+      } else {
+        throw new TypeError('Unexpected value for options.disambiguation; expected one of ' + VALID_DISAMBIGUATIONS.join(', '))
+      }
+    } else {
+      throw new TypeError(`Unexpected value of type '${optionsType}' for postgres-date parser options`)
+    }
   }
 
   isDigit (c) {
@@ -109,7 +152,7 @@ class PGDateParser {
     return null
   }
 
-  getTZOffset () {
+  getTZOffset (date, time) {
     // special handling for '+00' at the end of  - UTC
     if (this.pos === this.stringLen - 3 && this.dateString.slice(this.pos, this.pos + 3) === '+00') {
       this.pos += 3
@@ -117,6 +160,25 @@ class PGDateParser {
     }
 
     if (this.stringLen === this.pos) {
+      if (this.offset !== undefined) {
+        return this.offset * 60 * 1000
+      } else if (this.timeZone !== undefined) {
+        const Temporal = this.temporal ?? require('./temporal')()
+        const pdt = Temporal.PlainDateTime.from({
+          year: date.year,
+          month: date.month + 1,
+          day: date.day,
+          hour: time.hours,
+          minute: time.minutes,
+          second: time.seconds,
+          millisecond: time.milliseconds
+        })
+        const utc = pdt.toZonedDateTime('UTC').toInstant()
+        const zdt = pdt.toZonedDateTime(this.timeZone, {
+          disambiguation: this.disambiguation
+        }).toInstant()
+        return utc.epochMilliseconds - zdt.epochMilliseconds
+      }
       return undefined
     }
 
@@ -244,7 +306,7 @@ class PGDateParser {
       return null
     }
 
-    const tzOffset = this.getTZOffset()
+    const tzOffset = this.getTZOffset(date, time)
     if (tzOffset === null) {
       return null
     }
@@ -281,17 +343,17 @@ class PGDateParser {
     return jsDate
   }
 
-  static parse (dateString) {
-    return new PGDateParser(dateString).getJSDate()
+  static parse (dateString, timeZone) {
+    return new PGDateParser(dateString, timeZone).getJSDate()
   }
 }
 
-module.exports = function parseDate (isoDate) {
+module.exports = function parseDate (isoDate, timeZone) {
   if (isoDate === null || isoDate === undefined) {
     return null
   }
 
-  const date = PGDateParser.parse(isoDate)
+  const date = PGDateParser.parse(isoDate, timeZone)
 
   // parsing failed, check for infinity
   if (date === null) {
