@@ -102,6 +102,19 @@ test('date parser', function (t) {
     '0 to 99 year boundary'
   )
 
+  t.equal(
+    iso('0001-02-29 12:00:00+00 BC'),
+    '0000-02-29T12:00:00.000Z',
+    'leap day in 1 BC with offset'
+  )
+
+  const leapDay = parse('0001-02-29 12:00:00 BC')
+  t.deepEqual(
+    [leapDay.getFullYear(), leapDay.getMonth(), leapDay.getDate(), leapDay.getHours()],
+    [0, 1, 29, 12],
+    'leap day in 1 BC without offset'
+  )
+
   t.equal(parse('infinity'), Infinity)
   t.equal(parse('-infinity'), -Infinity)
 
