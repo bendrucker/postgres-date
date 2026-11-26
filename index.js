@@ -265,7 +265,7 @@ class PGDateParser {
       )
 
       if (date.year <= 99 && date.year >= -99) {
-        jsDate.setUTCFullYear(date.year)
+        jsDate.setUTCFullYear(date.year, date.month, date.day)
       }
 
       if (tzOffset !== 0) {
@@ -274,7 +274,7 @@ class PGDateParser {
     } else {
       jsDate = new Date(date.year, date.month, date.day, time.hours, time.minutes, time.seconds, time.milliseconds)
       if (date.year <= 99 && date.year >= -99) {
-        jsDate.setFullYear(date.year)
+        jsDate.setFullYear(date.year, date.month, date.day)
       }
     }
 
